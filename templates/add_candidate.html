@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Candidate</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f6f8;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .container {
+            margin-top: 40px;
+            max-width: 1000px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+        }
+        .form-title {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h3 class="form-title">Add Candidate</h3>
+    <form method="POST">
+        <div class="row mb-3">
+            <div class="col">
+                <label>Date of Call</label>
+                <input type="date" name="date_of_call" class="form-control" required>
+            </div>
+            <div class="col">
+                <label>Interview Type</label>
+                <select name="interview_type" class="form-select" required>
+                    <option value="" disabled selected>Select Interview Type</option>
+                    <option>Direct</option>
+                    <option>Inbound</option>
+                    <option>Outbound</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>Client</label>
+                <select name="client" class="form-select" required>
+                    <option value="" disabled selected>Select Client</option>
+                    <option>Wonderla</option>
+                    <option>Suzen</option>
+                    <option>Digiphoto</option>
+                    <option>Cospower</option>
+                    <option>Pride</option>
+                    <option>Chakde</option>
+                    <option>Others</option>
+                </select>
+            </div>
+            
+        <div class="row mb-3">
+            <div class="col">
+                <label>Source Type</label>
+                <select name="source_type" class="form-select" required>
+                    <option value="" disabled selected>Select Source Type</option>
+                    <option>Walkin</option>
+                    <option>Employee Referral</option>
+                    <option>Job Portal</option>
+                    <option>Social Media</option>
+                    <option>Others</option>
+                </select>
+            </div>
+                <div class="col">
+                <label>Source</label>
+                <input type="text" name="source" class="form-control" required>
+            </div>
+        </div>
+            <div class="col">
+                <label>Candidate Name</label>
+                <input type="text" name="candidate_name" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>Mobile No</label>
+                <input type="text" name="mobile" class="form-control" pattern="[0-9]{10}" required>
+            </div>
+            <div class="col">
+                <label>Email ID</label>
+                <input type="email" name="email" class="form-control">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>Gender</label>
+                <select name="gender" class="form-select" required>
+                    <option value="" disabled selected>Select Gender</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Age</label>
+                <input type="number" name="age" class="form-control" min="15">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>Candidate Location</label>
+                <input type="text" name="location" class="form-control">
+            </div>
+            <div class="col">
+                <label>Qualification</label>
+                <input type="text" name="qualification" class="form-control">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>Position Applied For</label>
+                <input type="text" name="position" class="form-control">
+            </div>
+            <div class="col">
+                <label>Department</label>
+                <input type="text" name="department" class="form-control">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>HR Comments</label>
+                <input type="text" name="hr_comments" class="form-control">
+            </div>
+            <div class="col">
+                <label>HR Status</label>
+                <select name="hr_status" id="hr_status" class="form-select" onchange="toggleFields()" required>
+                    <option value="" disabled selected>Select HR Status</option>
+                    <option value="Select">Select</option>
+                    <option value="Reject">Reject</option>
+                    <option value="Hold">Hold</option>
+                    <option value="Backup">Backup</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Conditional fields start -->
+        <div id="conditional-fields" style="display: none;">
+            <div class="row mb-3">
+                <div class="col">
+                    <label>Client Interview Date</label>
+                    <input type="date" name="client_interview_date" class="form-control">
+                </div>
+                <div class="col">
+                    <label>Interview Attended</label>
+                    <input type="text" name="interview_attended" class="form-control">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col">
+                    <label>If Not Attended Comments</label>
+                    <input type="text" name="not_attended_comments" class="form-control">
+                </div>
+                <div class="col">
+                    <label>Client Status</label>
+                    <select name="client_status" class="form-select">
+                        <option value="" disabled selected>Select Client Status</option>
+                        <option>Reject</option>
+                        <option>Hold</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col">
+                    <label>Client Comments</label>
+                    <input type="text" name="client_comments" class="form-control">
+                </div>
+                <div class="col">
+                    <label>Final Status</label>
+                    <select name="final_status" class="form-select">
+                        <option value="" disabled selected>Select Final Status</option>
+                        <option>Offer in Progress</option>
+                        <option>Offered</option>
+                        <option>Yet to Join</option>
+                        <option>Shortlist Dropout</option>
+                        <option>Offer Dropout</option>
+                        <option>Joining Dropout</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label>Additional Comments</label>
+                <input type="text" name="comments" class="form-control">
+            </div>
+        </div>
+        <!-- Conditional fields end -->
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-success">Submit</button>
+            <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function toggleFields() {
+    var status = document.getElementById("hr_status").value;
+    var fieldBlock = document.getElementById("conditional-fields");
+    if (status === "Select") {
+        fieldBlock.style.display = "block";
+    } else {
+        fieldBlock.style.display = "none";
+    }
+}
+</script>
+
+</body>
+</html>

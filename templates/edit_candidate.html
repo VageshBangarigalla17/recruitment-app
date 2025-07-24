@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Candidate</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        h2 { color: #333; margin-bottom: 20px; }
+        form { background: #fff; padding: 20px; border-radius: 10px; max-width: 1200px; margin: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .row { display: flex; gap: 20px; margin-bottom: 15px; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="email"], input[type="date"], select, textarea {
+            padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;
+        }
+        textarea { resize: vertical; }
+        input[type="submit"] {
+            margin-top: 20px; padding: 10px 20px; background-color: #009688;
+            color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;
+        }
+        .conditional-field { display: none; }
+    </style>
+    <script>
+        function toggleFields() {
+            const hrStatus = document.getElementById('hr_status').value;
+            const conditionalFields = document.querySelectorAll('.conditional-field');
+            conditionalFields.forEach(field => {
+                field.style.display = hrStatus === 'Select' ? 'block' : 'none';
+            });
+        }
+        window.onload = toggleFields;
+    </script>
+</head>
+<body>
+    <h2>Edit Candidate</h2>
+    <form method="POST">
+        <div class="row">
+            <div class="col">
+                <label>Date of Call</label>
+                <input type="date" name="date_of_call" value="{{ candidate['date_of_call'] }}">
+            </div>
+            <div class="col">
+                <label>Interview Type</label>
+                <select name="interview_type">
+                    <option value="">Select</option>
+                    {% for opt in ['Direct', 'Inbound', 'Outbound'] %}
+                    <option value="{{ opt }}" {% if candidate['interview_type'] == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col">
+                <label>Client</label>
+                <select name="client">
+                    <option value="">Select</option>
+                    {% for opt in ['Wonderla', 'Suzen', 'Digiphoto', 'Cospower', 'Pride', 'Chakde', 'Others'] %}
+                    <option value="{{ opt }}" {% if candidate['client'] == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <label>Source Type</label>
+                <select name="source_type">
+                    <option value="">Select</option>
+                    {% for opt in ['Walkin', 'Employee Referral', 'Job Portal', 'Social Media', 'Others'] %}
+                    <option value="{{ opt }}" {% if candidate['source_type'] == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col">
+                <label>Source</label>
+                <input type="text" name="source" value="{{ candidate['source'] }}">            
+            </div>
+            <div class="col">
+                <label>Candidate Name</label>
+                <input type="text" name="candidate_name" value="{{ candidate['candidate_name'] }}">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <label>Mobile No</label>
+                <input type="text" name="mobile" value="{{ candidate['mobile'] }}">
+            </div>
+            <div class="col">
+                <label>Email</label>
+                <input type="email" name="email" value="{{ candidate['email'] }}">
+            </div>
+            <div class="col">
+                <label>Gender</label>
+                <select name="gender">
+                    <option value="">Select</option>
+                    {% for opt in ['Male', 'Female', 'Other'] %}
+                    <option value="{{ opt }}" {% if candidate['gender'] == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <label>Age</label>
+                <input type="text" name="age" value="{{ candidate['age'] }}">
+            </div>
+            <div class="col">
+                <label>Location</label>
+                <input type="text" name="location" value="{{ candidate['location'] }}">
+            </div>
+            <div class="col">
+                <label>Qualification</label>
+                <input type="text" name="qualification" value="{{ candidate['qualification'] }}">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <label>Position Applied For</label>
+                <input type="text" name="position" value="{{ candidate['position'] }}">
+            </div>
+            <div class="col">
+                <label>Department</label>
+                <input type="text" name="department" value="{{ candidate['department'] }}">
+            </div>
+            <div class="col">
+                <label>HR Comments</label>
+                <input type="text" name="hr_comments" value="{{ candidate['hr_comments'] }}">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <label>HR Status</label>
+                <select name="hr_status" id="hr_status" onchange="toggleFields()">
+                    <option value="">Select</option>
+                    {% for opt in ['Select', 'Reject', 'Hold', 'Backup'] %}
+                    <option value="{{ opt }}" {% if candidate['hr_status'] == opt %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="conditional-field">
+            <div class="row">
+                <div class="col">
+                    <label>Client Interview Date</label>
+                    <input type="date" name="client_interview_date" value="{{ candidate['client_interview_date'] }}">
+                </div>
+                <div class="col">
+                    <label>Interview Attended</label>
+                    <input type="text" name="interview_attended" value="{{ candidate['interview_attended'] }}">
+                </div>
+                <div class="col">
+                    <label>Not Attended Comments</label>
+                    <input type="text" name="not_attended_comments" value="{{ candidate['not_attended_comments'] }}">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label>Client Status</label>
+                    <select name="client_status">
+                        <option value="">Select</option>
+                        {% for opt in ['Select', 'Reject', 'Hold'] %}
+                        <option value="{{ opt }}" {% if candidate['client_status'] == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Client Comments</label>
+                    <input type="text" name="client_comments" value="{{ candidate['client_comments'] }}">
+                </div>
+                <div class="col">
+                    <label>Final Status</label>
+                    <select name="final_status">
+                        <option value="">Select</option>
+                        {% for opt in ['Offer in Progress', 'Offered', 'Yet to Join', 'Shortlist Dropout', 'Offer Dropout', 'Joining Dropout'] %}
+                        <option value="{{ opt }}" {% if candidate['final_status'] == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label>Comments</label>
+                    <textarea name="comments">{{ candidate['comments'] }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <input type="submit" value="Update Candidate">
+    </form>
+</body>
+</html>

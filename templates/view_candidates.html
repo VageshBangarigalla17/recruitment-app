@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Candidates</title>
+    <style>
+        body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+        h2 { color: #444; display: inline-block; margin-right: 20px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .button-link {
+            text-decoration: none;
+            background-color: #00796b;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 10px; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        th { background-color: #00796b; color: white; }
+        .search-bar, .pagination { background: #fff; padding: 15px; margin-bottom: 20px; }
+        input[type="text"] { padding: 8px; margin-right: 10px; }
+        input[type="submit"], .export-btn { padding: 8px 12px; background-color: #00796b; color: white; border: none; cursor: pointer; }
+        .pagination a { margin: 0 5px; text-decoration: none; color: #00796b; font-weight: bold; }
+        .pagination span { margin: 0 5px; color: #333; }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <h2>View Candidates</h2>
+    <a class="button-link" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</div>
+
+<form method="POST" class="search-bar">
+    <input type="text" name="candidate_name" placeholder="Candidate Name" value="{{ search_name }}">
+    <input type="text" name="mobile_number" placeholder="Mobile Number" value="{{ search_mobile }}">
+    <input type="text" name="position" placeholder="Position Applied For" value="{{ search_position }}">
+    <input type="submit" value="Search">
+    <a href="{{ url_for('export_excel', candidate_name=search_name, mobile_number=search_mobile, position=search_position) }}" class="export-btn">Export to Excel</a>
+</form>
+
+<table>
+    <tr>
+        <th>App Ref No</th>
+        <th>Recruiter</th>
+        <th>Date of Call</th>
+        <th>Client</th>
+        <th>Source Type</th>
+        <th>Source</th>
+        <th>Candidate Name</th>
+        <th>Mobile No</th>
+        <th>Qualification</th>
+        <th>Position Applied For</th>
+        <th>HR Comments</th>
+        <th>HR Status</th>
+        <th>Final Status</th>
+        <th>Comments</th>
+        <th>Action</th>
+    </tr>
+    {% for row in candidates %}
+    <tr>
+        <td>{{ row['app_ref_no'] }}</td>
+        <td>{{ row['recruiter'] }}</td>
+        <td>{{ row['date_of_call'] }}</td>
+        <td>{{ row['client'] }}</td>
+        <td>{{ row['source_type'] }}</td>
+        <td>{{ row['source'] }}</td>
+        <td>{{ row['candidate_name'] }}</td>
+        <td>{{ row['mobile'] }}</td>
+        <td>{{ row['qualification'] }}</td>
+        <td>{{ row['position'] }}</td>
+        <td>{{ row['hr_comments'] }}</td>
+        <td>{{ row['hr_status'] }}</td>
+        <td>{{ row['final_status'] }}</td>
+        <td>{{ row['comments'] }}</td>
+        <td><a href="{{ url_for('edit_candidate', candidate_id=row['id']) }}">Edit</a></td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="pagination">
+    {% if page > 1 %}
+        <a href="{{ url_for('view_candidates', page=page-1, candidate_name=search_name, mobile_number=search_mobile, position=search_position) }}">Previous</a>
+    {% endif %}
+    <span>Page {{ page }}</span>
+    {% if has_more %}
+        <a href="{{ url_for('view_candidates', page=page+1, candidate_name=search_name, mobile_number=search_mobile, position=search_position) }}">Next</a>
+    {% endif %}
+</div>
+
+</body>
+</html>
