@@ -73,17 +73,15 @@ def add_candidate():
 def view_candidates():
     if 'username' not in session:
         return redirect(url_for('login'))
-    # Filters
+
     name_filter = request.form.get('candidate_name', '').strip() if request.method == 'POST' else request.args.get('candidate_name','').strip()
     mobile_filter = request.form.get('mobile_number', '').strip() if request.method == 'POST' else request.args.get('mobile_number','').strip()
     position_filter = request.form.get('position', '').strip() if request.method == 'POST' else request.args.get('position','').strip()
 
-    # Pagination
     page = int(request.args.get('page', 1))
     per_page = 10
     offset = (page - 1) * per_page
 
-    # Base query
     base_sql = 'SELECT * FROM candidates WHERE 1=1'
     params = {}
 
@@ -100,17 +98,16 @@ def view_candidates():
         base_sql += ' AND position ILIKE :position_filter'
         params['position_filter'] = f'%{position_filter}%'
 
-    # Total count
     count_sql = f'SELECT COUNT(*) FROM ({base_sql}) AS sub'
     total = db.session.execute(text(count_sql), params).scalar()
 
-    # Paginated
     paginated_sql = base_sql + ' ORDER BY id DESC LIMIT :limit OFFSET :offset'
     params['limit'] = per_page
     params['offset'] = offset
     result = db.session.execute(text(paginated_sql), params)
     candidates = result.fetchall()
-    total_pages = (total + per_page - 1) // per_page
+    total_pages = (total + per_page - 1) // per_page if total else 1
+
     return render_template(
         'view_candidates.html',
         candidates=candidates,
@@ -148,7 +145,18 @@ def export_excel():
         params['position_filter'] = f'%{position_filter}%'
 
     data = db.session.execute(text(base_sql), params).fetchall()
-    df = pd.DataFrame(data, columns=data[0].keys() if data else [])
+
+    if data:
+        df = pd.DataFrame(data, columns=data[0].keys())
+    else:
+        df = pd.DataFrame(columns=[
+            'app_ref_no', 'recruiter', 'date_of_call', 'interview_type', 'client', 'source', 'source_type',
+            'candidate_name', 'mobile', 'email', 'gender', 'age', 'location',
+            'qualification', 'position', 'department', 'hr_comments', 'hr_status',
+            'client_interview_date', 'interview_attended', 'not_attended_comments',
+            'client_status', 'client_comments', 'final_status', 'comments'
+        ])
+
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df.to_excel(writer, index=False, sheet_name='Candidates')
