@@ -1,73 +1,59 @@
+from app import app, db
+from sqlalchemy import Column, Integer, String, Text
 
-import sqlite3
+# --- Define Models ---
+class Candidate(db.Model):
+    __tablename__ = 'candidates'
+    id = Column(Integer, primary_key=True)
+    app_ref_no = Column(Integer)
+    recruiter = Column(String)
+    date_of_call = Column(String)
+    interview_type = Column(String)
+    client = Column(String)
+    source = Column(String)
+    source_type = Column(String)
+    candidate_name = Column(String)
+    mobile = Column(String)
+    email = Column(String)
+    gender = Column(String)
+    age = Column(String)
+    location = Column(String)
+    qualification = Column(String)
+    position = Column(String)
+    department = Column(String)
+    hr_comments = Column(Text)
+    hr_status = Column(String)
+    client_interview_date = Column(String)
+    interview_attended = Column(String)
+    not_attended_comments = Column(Text)
+    client_status = Column(String)
+    client_comments = Column(Text)
+    final_status = Column(String)
+    comments = Column(Text)
 
-# Connect to database (creates file if it doesn't exist)
-conn = sqlite3.connect('recruitment.db')
-c = conn.cursor()
+class User(db.Model):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    username = Column(String, unique=True, nullable=False)
+    password = Column(String, nullable=False)
+    role = Column(String, nullable=False)
 
-# ❗ Drop candidates table if exists (starting fresh)
-c.execute('DROP TABLE IF EXISTS candidates')
+# --- Initialize Database within App Context ---
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
 
-# ✅ Create candidates table with App Ref No and full structure
-c.execute('''
-CREATE TABLE IF NOT EXISTS candidates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    app_ref_no INTEGER,
-    recruiter TEXT,
-    date_of_call TEXT,
-    interview_type TEXT,
-    client TEXT,
-    source TEXT,
-    source_type TEXT,
-    candidate_name TEXT,
-    mobile TEXT,
-    email TEXT,
-    gender TEXT,
-    age TEXT,
-    location TEXT,
-    qualification TEXT,
-    position TEXT,
-    department TEXT,
-    hr_comments TEXT,
-    hr_status TEXT,
-    client_interview_date TEXT,
-    interview_attended TEXT,
-    not_attended_comments TEXT,
-    client_status TEXT,
-    client_comments TEXT,
-    final_status TEXT,
-    comments TEXT
-)
-''')
-
-# ✅ Create users table if not exists
-c.execute('''
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
-    password TEXT,
-    role TEXT
-)
-''')
-
-# ✅ Insert default users (admin + 5 recruiters)
-users = [
-    ('ADYAHR', 'pass123', 'admin'),
-    ('Veena', 'pass123', 'recruiter'),
-    ('Rani', 'pass123', 'recruiter'),
-    ('Tasneem', 'pass123', 'recruiter'),
-    ('Harsha Teja', 'pass123', 'recruiter'),
-    ('Vasam Shiva', 'pass123', 'recruiter'),
-]
-
-# Insert only if not already exists
-for user in users:
-    try:
-        c.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', user)
-    except sqlite3.IntegrityError:
-        continue
-
-conn.commit()
-conn.close()
-
-print("✅ Fresh database created with App Ref No support.")
+        # --- Seed Default Users ---
+        default_users = [
+            User(username='ADYAHR', password='pass123', role='admin'),
+            User(username='Veena', password='pass123', role='recruiter'),
+            User(username='Rani', password='pass123', role='recruiter'),
+            User(username='Tasneem', password='pass123', role='recruiter'),
+            User(username='Harsha Teja', password='pass123', role='recruiter'),
+            User(username='Vasam Shiva', password='pass123', role='recruiter'),
+        ]
+        for u in default_users:
+            if not User.query.filter_by(username=u.username).first():
+                db.session.add(u)
+        db.session.commit()
+        print("✅ PostgreSQL database initialized with user and candidate tables.")
