@@ -163,5 +163,38 @@ def export_excel():
     output.seek(0)
     return send_file(output, download_name='candidates.xlsx', as_attachment=True)
 
+# ✅ NEW ROUTE: Edit Candidate
+@app.route('/edit_candidate/<int:candidate_id>', methods=['GET', 'POST'])
+def edit_candidate(candidate_id):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    # Get the candidate from DB
+    result = db.session.execute(
+        text('SELECT * FROM candidates WHERE id = :id'),
+        {'id': candidate_id}
+    )
+    candidate = result.fetchone()
+    if not candidate:
+        return "Candidate not found", 404
+
+    if request.method == 'POST':
+        fields = [
+            'date_of_call', 'interview_type', 'client', 'source', 'source_type',
+            'candidate_name', 'mobile', 'email', 'gender', 'age', 'location',
+            'qualification', 'position', 'department', 'hr_comments', 'hr_status',
+            'client_interview_date', 'interview_attended', 'not_attended_comments',
+            'client_status', 'client_comments', 'final_status', 'comments'
+        ]
+        updates = {field: request.form.get(field, '') for field in fields}
+        set_clause = ', '.join([f"{field} = :{field}" for field in fields])
+        updates['id'] = candidate_id
+        sql = text(f"UPDATE candidates SET {set_clause} WHERE id = :id")
+        db.session.execute(sql, updates)
+        db.session.commit()
+        return redirect(url_for('view_candidates'))
+
+    return render_template('edit_candidate.html', candidate=candidate)
+
 if __name__ == '__main__':
     app.run(debug=True)
