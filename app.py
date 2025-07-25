@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, session, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 import pandas as pd
 import io
 
@@ -20,14 +21,12 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        result = db.engine.execute(
-            'SELECT * FROM users WHERE username = %s AND password = %s',
-            (username, password)
-        )
+        query = text('SELECT * FROM users WHERE username = :username AND password = :password')
+        result = db.session.execute(query, {'username': username, 'password': password})
         user = result.fetchone()
         if user:
-            session['username'] = user['username']
-            session['role'] = user['role']
+            session['username'] = user.username
+            session['role'] = user.role
             return redirect(url_for('dashboard'))
         else:
             error = 'Invalid credentials.'
@@ -49,8 +48,7 @@ def add_candidate():
     if 'username' not in session:
         return redirect(url_for('login'))
     if request.method == 'POST':
-        # Get next reference number
-        last = db.engine.execute('SELECT MAX(app_ref_no) FROM candidates').scalar()
+        last = db.session.execute(text('SELECT MAX(app_ref_no) FROM candidates')).scalar()
         app_ref_no = (last + 1) if last else 50001
         fields = [
             'date_of_call', 'interview_type', 'client', 'source', 'source_type',
@@ -60,11 +58,14 @@ def add_candidate():
             'client_status', 'client_comments', 'final_status', 'comments'
         ]
         values = [request.form.get(f, '') for f in fields]
-        params = [app_ref_no, session['username']] + values
-        placeholders = ','.join(['%s'] * (len(params)))
-        columns = ','.join(['app_ref_no', 'recruiter'] + fields)
+        params = {'app_ref_no': app_ref_no, 'recruiter': session['username']}
+        for i, f in enumerate(fields):
+            params[f] = values[i]
+        placeholders = ', '.join(f':{k}' for k in ['app_ref_no', 'recruiter'] + fields)
+        columns = ', '.join(['app_ref_no', 'recruiter'] + fields)
         sql = f"INSERT INTO candidates ({columns}) VALUES ({placeholders})"
-        db.engine.execute(sql, tuple(params))
+        db.session.execute(text(sql), params)
+        db.session.commit()
         return redirect(url_for('dashboard'))
     return render_template('add_candidate.html')
 
@@ -76,31 +77,38 @@ def view_candidates():
     name_filter = request.form.get('candidate_name', '').strip() if request.method == 'POST' else request.args.get('candidate_name','').strip()
     mobile_filter = request.form.get('mobile_number', '').strip() if request.method == 'POST' else request.args.get('mobile_number','').strip()
     position_filter = request.form.get('position', '').strip() if request.method == 'POST' else request.args.get('position','').strip()
+
     # Pagination
     page = int(request.args.get('page', 1))
     per_page = 10
     offset = (page - 1) * per_page
+
     # Base query
     base_sql = 'SELECT * FROM candidates WHERE 1=1'
-    params = []
+    params = {}
+
     if session['role'] != 'admin':
-        base_sql += ' AND recruiter = %s'
-        params.append(session['username'])
+        base_sql += ' AND recruiter = :recruiter'
+        params['recruiter'] = session['username']
     if name_filter:
-        base_sql += ' AND candidate_name ILIKE %s'
-        params.append(f'%{name_filter}%')
+        base_sql += ' AND candidate_name ILIKE :name_filter'
+        params['name_filter'] = f'%{name_filter}%'
     if mobile_filter:
-        base_sql += ' AND mobile ILIKE %s'
-        params.append(f'%{mobile_filter}%')
+        base_sql += ' AND mobile ILIKE :mobile_filter'
+        params['mobile_filter'] = f'%{mobile_filter}%'
     if position_filter:
-        base_sql += ' AND position ILIKE %s'
-        params.append(f'%{position_filter}%')
-    # Count total
+        base_sql += ' AND position ILIKE :position_filter'
+        params['position_filter'] = f'%{position_filter}%'
+
+    # Total count
     count_sql = f'SELECT COUNT(*) FROM ({base_sql}) AS sub'
-    total = db.engine.execute(count_sql, tuple(params)).scalar()
-    # Fetch paginated
-    paginated_sql = base_sql + ' ORDER BY id DESC LIMIT %s OFFSET %s'
-    result = db.engine.execute(paginated_sql, tuple(params + [per_page, offset]))
+    total = db.session.execute(text(count_sql), params).scalar()
+
+    # Paginated
+    paginated_sql = base_sql + ' ORDER BY id DESC LIMIT :limit OFFSET :offset'
+    params['limit'] = per_page
+    params['offset'] = offset
+    result = db.session.execute(text(paginated_sql), params)
     candidates = result.fetchall()
     total_pages = (total + per_page - 1) // per_page
     return render_template(
@@ -117,24 +125,29 @@ def view_candidates():
 def export_excel():
     if 'username' not in session:
         return redirect(url_for('login'))
+
     base_sql = 'SELECT * FROM candidates WHERE 1=1'
-    params = []
+    params = {}
+
     if session['role'] != 'admin':
-        base_sql += ' AND recruiter = %s'
-        params.append(session['username'])
+        base_sql += ' AND recruiter = :recruiter'
+        params['recruiter'] = session['username']
+
     name_filter = request.args.get('candidate_name','').strip()
     mobile_filter = request.args.get('mobile_number','').strip()
     position_filter = request.args.get('position','').strip()
+
     if name_filter:
-        base_sql += ' AND candidate_name ILIKE %s'
-        params.append(f'%{name_filter}%')
+        base_sql += ' AND candidate_name ILIKE :name_filter'
+        params['name_filter'] = f'%{name_filter}%'
     if mobile_filter:
-        base_sql += ' AND mobile ILIKE %s'
-        params.append(f'%{mobile_filter}%')
+        base_sql += ' AND mobile ILIKE :mobile_filter'
+        params['mobile_filter'] = f'%{mobile_filter}%'
     if position_filter:
-        base_sql += ' AND position ILIKE %s'
-        params.append(f'%{position_filter}%')
-    data = db.engine.execute(base_sql, tuple(params)).fetchall()
+        base_sql += ' AND position ILIKE :position_filter'
+        params['position_filter'] = f'%{position_filter}%'
+
+    data = db.session.execute(text(base_sql), params).fetchall()
     df = pd.DataFrame(data, columns=data[0].keys() if data else [])
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
